@@ -77,6 +77,15 @@ export default function PrivyConnect() {
                             {usdcBalance !== null ? `$${usdcBalance.toFixed(2)}` : "Error"}
                         </span>
                     )}
+                    <a
+                        href="https://spl-token-faucet.com/?token-name=USDC-Dev"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm ml-1"
+                        title="Get dev USDC"
+                    >
+                        💧
+                    </a>
                 </div>
             </div>
 
