@@ -6,6 +6,7 @@ import { formatEther, formatUnits } from "viem";
 import { erc20Abi, testUsdcAbi } from "@/app/evm/abis";
 import { FAUCETS, isMintableTestToken, VIEM_CHAINS } from "@/app/evm/chains";
 import { getEvmClients, getReadClient } from "@/app/evm/clients";
+import EvmWalletChain from "@/app/components/EvmWalletChain";
 import type { EvmLane } from "@/app/evm/types";
 
 // Below this you cannot send approve + pay on any of these chains.
@@ -176,6 +177,8 @@ export default function EvmConnect({
                         </span>
                     </div>
                 </div>
+
+                <EvmWalletChain wallet={wallet} chainId={chainId} onSwitched={() => setReloadKey((k) => k + 1)} />
 
                 {canMint && (
                     <button

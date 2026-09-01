@@ -28,6 +28,19 @@ export const VIEM_CHAINS: Record<number, Chain> = {
     46630: robinhoodTestnet,
 };
 
+// Display only: a wallet can sit on a chain this demo does not serve, and "chain 1" tells you nothing.
+const CHAIN_LABELS: Record<number, string> = {
+    1: "Ethereum",
+    10: "OP Mainnet",
+    137: "Polygon",
+    42161: "Arbitrum One",
+    11155111: "Sepolia",
+};
+
+export function chainLabel(chainId: number): string {
+    return VIEM_CHAINS[chainId]?.name ?? CHAIN_LABELS[chainId] ?? `chain ${chainId}`;
+}
+
 // ONE json var, not one per chain: Next inlines `process.env.X` literally at build time, so a computed
 // key (process.env[`NEXT_PUBLIC_EVM_RPC_${id}`]) is always undefined in the browser.
 const RPC_OVERRIDES: Record<string, string> = (() => {
