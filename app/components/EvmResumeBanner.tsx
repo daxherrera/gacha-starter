@@ -4,7 +4,14 @@ import * as React from "react";
 import { evmGet } from "@/app/evm/api";
 import { explorerTxUrl } from "@/app/evm/chains";
 import { resumePack } from "@/app/evm/flows";
-import { clearPending, isExpired, readPending, type PendingPack } from "@/app/evm/resume";
+import {
+    clearPending,
+    getEmptySnapshot,
+    getPendingSnapshot,
+    isExpired,
+    subscribeResume,
+    type PendingPack,
+} from "@/app/evm/resume";
 import type { EvmPackStatus } from "@/app/evm/types";
 
 /**
@@ -13,12 +20,9 @@ import type { EvmPackStatus } from "@/app/evm/types";
  * landed but whose openPack never returned is completable only from the memo and the pay tx hash the
  * browser kept. This is where they come back.
  */
-export default function EvmResumeBanner({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
-    const [rows, setRows] = React.useState<PendingPack[]>([]);
-
-    React.useEffect(() => {
-        setRows(readPending());
-    }, [refreshKey]);
+export default function EvmResumeBanner({ onChanged }: { onChanged: () => void }) {
+    // The pending list lives in localStorage, so subscribe to it rather than copying it into state.
+    const rows = React.useSyncExternalStore(subscribeResume, getPendingSnapshot, getEmptySnapshot);
 
     if (rows.length === 0) return null;
 
@@ -30,14 +34,7 @@ export default function EvmResumeBanner({ refreshKey, onChanged }: { refreshKey:
                 so it is always safe to try again.
             </p>
             {rows.map((p) => (
-                <ResumeRow
-                    key={p.memo}
-                    pack={p}
-                    onDone={() => {
-                        setRows(readPending());
-                        onChanged();
-                    }}
-                />
+                <ResumeRow key={p.memo} pack={p} onDone={onChanged} />
             ))}
         </div>
     );

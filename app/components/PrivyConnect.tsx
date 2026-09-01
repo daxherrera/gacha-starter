@@ -8,39 +8,37 @@ export default function PrivyConnect() {
     const { ready, authenticated, login, logout } = usePrivy();
     const { wallets } = useWallets();
     const wallet = wallets?.[0];
-    const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
-    const [loadingBalance, setLoadingBalance] = useState(false);
+    // Stamped with the address it was read for, so a wallet switch never shows the previous balance.
+    const [fetched, setFetched] = useState<{ address: string; value: number | null } | null>(null);
+
+    const address = authenticated ? wallet?.address ?? null : null;
 
     // Fetch USDC balance when wallet is connected
     useEffect(() => {
-        const fetchUsdcBalance = async () => {
-            if (!wallet?.address) return;
-
-            setLoadingBalance(true);
+        if (!address) return;
+        const controller = new AbortController();
+        void (async () => {
             try {
                 const response = await fetch("/api/getUsdcBalance", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ address: wallet.address }),
+                    body: JSON.stringify({ address }),
+                    signal: controller.signal,
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setUsdcBalance(data.balance || 0);
-                }
+                const data = response.ok ? await response.json() : null;
+                setFetched({ address, value: data ? data.balance || 0 : null });
             } catch (error) {
+                if (controller.signal.aborted) return;
                 console.error("Failed to fetch USDC balance:", error);
-            } finally {
-                setLoadingBalance(false);
+                setFetched({ address, value: null });
             }
-        };
+        })();
+        return () => controller.abort();
+    }, [address]);
 
-        if (authenticated && wallet?.address) {
-            fetchUsdcBalance();
-        } else {
-            setUsdcBalance(null);
-        }
-    }, [authenticated, wallet?.address]);
+    // Derived, not stored: disconnecting drops the balance without a setState in the effect.
+    const usdcBalance = fetched?.address === address ? fetched.value : null;
+    const loadingBalance = address !== null && fetched?.address !== address;
 
     if (!ready) {
         return <div>Loading...</div>;

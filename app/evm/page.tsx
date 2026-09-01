@@ -7,7 +7,7 @@ import EvmConnect from "@/app/components/EvmConnect";
 import EvmPackOpener, { EvmCardsGrid } from "@/app/components/EvmPackOpener";
 import EvmResumeBanner from "@/app/components/EvmResumeBanner";
 import { evmGet } from "@/app/evm/api";
-import { readCards, readPending, type OwnedCard } from "@/app/evm/resume";
+import { getCardsSnapshot, getEmptySnapshot, getPendingSnapshot, subscribeResume } from "@/app/evm/resume";
 import { lanesOf, type EvmChainInfo, type EvmChainsResponse } from "@/app/evm/types";
 
 const PACK_TYPE = process.env.NEXT_PUBLIC_PACK_TYPE ?? "pokemon_50";
@@ -20,8 +20,9 @@ export default function EvmHome() {
     const [chainId, setChainId] = React.useState<number | null>(null);
     const [laneKey, setLaneKey] = React.useState<string | null>(null);
     const [refreshKey, setRefreshKey] = React.useState(0);
-    const [cards, setCards] = React.useState<OwnedCard[]>([]);
-    const [laneLocked, setLaneLocked] = React.useState(false);
+    // Both lists live in localStorage; subscribe rather than copying them into state.
+    const cards = React.useSyncExternalStore(subscribeResume, getCardsSnapshot, getEmptySnapshot);
+    const pending = React.useSyncExternalStore(subscribeResume, getPendingSnapshot, getEmptySnapshot);
 
     // The machine is multichain: ask which chains it serves rather than assuming one.
     React.useEffect(() => {
@@ -47,14 +48,11 @@ export default function EvmHome() {
         })();
     }, []);
 
-    React.useEffect(() => {
-        setCards(readCards());
-        setLaneLocked(readPending().length > 0);
-    }, [refreshKey]);
-
     const chain = chains.find((c) => c.chainId === chainId) ?? null;
     const lane = chain ? lanesOf(chain).find((l) => l.key === laneKey) ?? null : null;
     const blocked = chain ? buyBlockedReason(chain) : null;
+    // A stranded pack pins the lane: it can only be finished on the chain and token it was paid in.
+    const laneLocked = pending.length > 0;
     const bump = () => setRefreshKey((k) => k + 1);
 
     return (
@@ -91,7 +89,7 @@ export default function EvmHome() {
                 </div>
             )}
 
-            <EvmResumeBanner refreshKey={refreshKey} onChanged={bump} />
+            <EvmResumeBanner onChanged={bump} />
 
             <EvmChainPicker
                 chains={chains}

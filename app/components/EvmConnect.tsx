@@ -28,43 +28,48 @@ export default function EvmConnect({
     const wallet = wallets?.[0];
     const { createWallet } = useCreateWallet();
 
-    const [tokenBal, setTokenBal] = React.useState<bigint | null>(null);
-    const [gasBal, setGasBal] = React.useState<bigint | null>(null);
+    // Stamped with the (wallet, chain, token) it was read for: switching any of the three must not
+    // leave the previous triple's balances on screen.
+    const [read, setRead] = React.useState<{ key: string; token: bigint | null; gas: bigint | null } | null>(null);
+    const [reloadKey, setReloadKey] = React.useState(0);
     const [busy, setBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     const address = wallet?.address as `0x${string}` | undefined;
-
-    const load = React.useCallback(async () => {
-        if (!address || !chainId || !lane || !VIEM_CHAINS[chainId]) {
-            setTokenBal(null);
-            setGasBal(null);
-            return;
-        }
-        try {
-            // A plain read client: on EVM, balances need no backend route at all.
-            const pub = getReadClient(chainId);
-            const [t, g] = await Promise.all([
-                pub.readContract({
-                    address: lane.address,
-                    abi: erc20Abi,
-                    functionName: "balanceOf",
-                    args: [address],
-                }),
-                pub.getBalance({ address }),
-            ]);
-            setTokenBal(t);
-            setGasBal(g);
-        } catch (e) {
-            console.error("balance read failed", e);
-            setTokenBal(null);
-            setGasBal(null);
-        }
-    }, [address, chainId, lane]);
+    const readKey = `${address ?? ""}:${chainId ?? ""}:${lane?.address ?? ""}`;
 
     React.useEffect(() => {
-        void load();
-    }, [load, refreshKey]);
+        if (!address || !chainId || !lane || !VIEM_CHAINS[chainId]) return;
+        const key = `${address}:${chainId}:${lane.address}`;
+        let live = true;
+        void (async () => {
+            try {
+                // A plain read client: on EVM, balances need no backend route at all.
+                const pub = getReadClient(chainId);
+                const [t, g] = await Promise.all([
+                    pub.readContract({
+                        address: lane.address,
+                        abi: erc20Abi,
+                        functionName: "balanceOf",
+                        args: [address],
+                    }),
+                    pub.getBalance({ address }),
+                ]);
+                if (live) setRead({ key, token: t, gas: g });
+            } catch (e) {
+                console.error("balance read failed", e);
+                if (live) setRead({ key, token: null, gas: null });
+            }
+        })();
+        return () => {
+            live = false;
+        };
+    }, [address, chainId, lane, refreshKey, reloadKey]);
+
+    // Derived, not stored: an unreadable or superseded triple reads as "—" with no setState.
+    const current = read?.key === readKey ? read : null;
+    const tokenBal = current?.token ?? null;
+    const gasBal = current?.gas ?? null;
 
     const mintTestUsdc = async () => {
         if (!wallet || !chainId || !lane) return;
@@ -83,7 +88,7 @@ export default function EvmConnect({
             });
             const hash = await walletClient.writeContract(request);
             await publicClient.waitForTransactionReceipt({ hash });
-            await load();
+            setReloadKey((k) => k + 1);
             onBalanceChange?.();
         } catch (e) {
             setError((e as Error).message.split("\n")[0]);
