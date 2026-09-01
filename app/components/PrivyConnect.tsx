@@ -10,6 +10,7 @@ export default function PrivyConnect() {
     const wallet = wallets?.[0];
     // Stamped with the address it was read for, so a wallet switch never shows the previous balance.
     const [fetched, setFetched] = useState<{ address: string; value: number | null } | null>(null);
+    const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
 
     const address = authenticated ? wallet?.address ?? null : null;
 
@@ -35,6 +36,17 @@ export default function PrivyConnect() {
         })();
         return () => controller.abort();
     }, [address]);
+
+    const copyAddress = async () => {
+        if (!address) return;
+        try {
+            await navigator.clipboard.writeText(address);
+            setCopied("ok");
+        } catch {
+            setCopied("fail");
+        }
+        setTimeout(() => setCopied(null), 1500);
+    };
 
     // Derived, not stored: disconnecting drops the balance without a setState in the effect.
     const usdcBalance = fetched?.address === address ? fetched.value : null;
@@ -63,6 +75,16 @@ export default function PrivyConnect() {
                     <span className="font-mono text-sm text-green-700">
                         {wallet?.address ? `${wallet.address.slice(0, 4)}...${wallet.address.slice(-4)}` : "No wallet"}
                     </span>
+                    {address && (
+                        <button
+                            onClick={() => void copyAddress()}
+                            title={address}
+                            aria-label="Copy wallet address"
+                            className="text-xs text-green-800 border border-green-300 hover:bg-green-100 rounded px-2 py-0.5 font-medium"
+                        >
+                            {copied === "ok" ? "Copied" : copied === "fail" ? "Blocked" : "Copy"}
+                        </button>
+                    )}
                 </div>
 
                 {/* USDC Balance */}

@@ -34,6 +34,7 @@ export default function EvmConnect({
     const [reloadKey, setReloadKey] = React.useState(0);
     const [busy, setBusy] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const [copied, setCopied] = React.useState(false);
 
     const address = wallet?.address as `0x${string}` | undefined;
     const readKey = `${address ?? ""}:${chainId ?? ""}:${lane?.address ?? ""}`;
@@ -70,6 +71,17 @@ export default function EvmConnect({
     const current = read?.key === readKey ? read : null;
     const tokenBal = current?.token ?? null;
     const gasBal = current?.gas ?? null;
+
+    const copyAddress = async () => {
+        if (!address) return;
+        try {
+            await navigator.clipboard.writeText(address);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            setError("Clipboard blocked by the browser.");
+        }
+    };
 
     const mintTestUsdc = async () => {
         if (!wallet || !chainId || !lane) return;
@@ -140,6 +152,14 @@ export default function EvmConnect({
                         <span className="font-mono text-sm text-green-700">
                             {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
                         </span>
+                        <button
+                            onClick={() => void copyAddress()}
+                            title={wallet.address}
+                            aria-label="Copy wallet address"
+                            className="text-xs text-green-800 border border-green-300 hover:bg-green-100 rounded px-2 py-0.5 font-medium"
+                        >
+                            {copied ? "Copied" : "Copy"}
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-2 border-l border-green-300 pl-4">
