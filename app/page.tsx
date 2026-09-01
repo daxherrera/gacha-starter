@@ -5,6 +5,7 @@ import NftGallery from "@/app/components/NftGallery";
 import PackOpener from "@/app/components/PackOpener";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
   const { wallets } = useWallets();
@@ -18,12 +19,17 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* GitHub Link */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 space-x-2">
         <a href="https://github.com/daxherrera/gacha-starter" target="_blank">
           <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
             Go to GitHub Repo
           </button>
         </a>
+        <Link href="/evm">
+          <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+            Try the EVM version →
+          </button>
+        </Link>
       </div>
 
       <h1 className="text-3xl font-bold mb-8 text-center">

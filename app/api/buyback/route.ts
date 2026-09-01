@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = "https://dev-gacha.collectorcrypt.com/api";
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://dev-gacha.collectorcrypt.com/api";
 const API_KEY = process.env.API_KEY;
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
         const data = await response.json();
         return NextResponse.json(data);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

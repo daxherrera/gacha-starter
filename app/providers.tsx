@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { PrivyProvider } from '@privy-io/react-auth';
+import { PrivyProvider, SUPPORTED_CHAINS } from '@privy-io/react-auth';
 import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { robinhood, robinhoodTestnet } from '@/app/evm/chains';
 
 const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 const clientId = process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID!;
@@ -32,10 +33,22 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
                 embeddedWallets: {
                     solana: { createOnLogin: 'users-without-wallets' },
+                    ethereum: { createOnLogin: 'users-without-wallets' },
                     showWalletUIs: false,
                 },
 
                 externalWallets: { solana: { connectors: toSolanaWalletConnectors() } },
+
+                // supportedChains REPLACES Privy's default list rather than merging into it, so spread
+                // the SDK's own defaults — otherwise a wallet sitting on Ethereum mainnet becomes
+                // "unsupported" and gets a switch-network prompt on the Solana page too. Robinhood is
+                // added because viem ships no definition for it and Privy refuses switchChain on a
+                // chain that is not in this list.
+                //
+                // Deliberately NO `defaultChain`: setting it turns on
+                // shouldEnforceDefaultChainOnConnect, which makes WalletConnect require that chain at
+                // session init. The EVM page calls wallet.switchChain(chainId) explicitly instead.
+                supportedChains: [...SUPPORTED_CHAINS, robinhood, robinhoodTestnet],
 
                 solana: {
                     rpcs: {

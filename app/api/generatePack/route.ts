@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = "https://dev-gacha.collectorcrypt.com/api";
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://dev-gacha.collectorcrypt.com/api";
 const API_KEY = process.env.API_KEY;
+const DEFAULT_PACK_TYPE = process.env.NEXT_PUBLIC_PACK_TYPE ?? "pokemon_50";
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
         // Transform the request body to match the API requirements
         const apiRequestBody = {
             playerAddress: body.wallet || body.playerAddress,
-            packType: body.packType === "standard" ? "pokemon_50" : body.packType || "pokemon_50",
+            packType: body.packType === "pokemon_50" ? DEFAULT_PACK_TYPE : body.packType || DEFAULT_PACK_TYPE,
             ...(body.turbo && { turbo: body.turbo })
         };
 

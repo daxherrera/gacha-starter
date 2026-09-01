@@ -4,6 +4,8 @@ import * as React from "react";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { usePrivy } from "@privy-io/react-auth";
 
+const DEFAULT_PACK_TYPE = process.env.NEXT_PUBLIC_PACK_TYPE ?? "pokemon_50";
+
 type PackOpenerProps = {
     onPackOpened?: () => void;
 };
@@ -65,7 +67,7 @@ export default function PackOpener({ onPackOpened }: PackOpenerProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     wallet: wallet.address,
-                    packType: "pokemon_50",
+                    packType: DEFAULT_PACK_TYPE,
                 }),
             });
 
