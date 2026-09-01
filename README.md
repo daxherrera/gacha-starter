@@ -60,6 +60,14 @@ Full contract: https://docs.collectorcrypt.com/gacha/evm-api
 - **The memo is persisted before any money moves**, and the pay transaction hash the instant it
   exists — before its receipt is awaited. Payments are final, so a closed tab must not be able to
   strand one. `/evm` shows an "Unfinished packs" banner that completes them; opening is idempotent.
+- **Your cards are read from the card contract, not from an NFT API.** `CollectorCrypt` is
+  ERC721Enumerable, so `balanceOf` + `tokenOfOwnerByIndex` over multicall3 is the authoritative list:
+  no API key, nothing to index, no lag behind the mint, and it works on Robinhood Chain, which the
+  hosted NFT APIs do not cover. `localStorage` is kept only for the memo and the resume banner.
+- **"In the machine" and "Your cards" are two different questions, from two different APIs.**
+  `/api/getNfts` returns the machine's POOL — its handler reads `code`, `rarity`, `page` and `limit`
+  and ignores an `owner` param, so it can never answer what a wallet holds. The wallet grid comes from
+  the Collector Crypt cards API on Solana, and straight off the card contract on EVM.
 - **Balances are read client-side.** On EVM a balance needs no backend, unlike the Solana
   `/api/getUsdcBalance` route which exists because the RPC lives server-side.
 - **The chain and lane picker is driven by `GET /api/evm/chains` at runtime.** Nothing is hardcoded —

@@ -10,6 +10,9 @@ export const robinhood = defineChain({
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: { default: { http: ["https://rpc.mainnet.chain.robinhood.com"] } },
     blockExplorers: { default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" } },
+    // Deployed at the canonical address, but absent from the chain definition, so viem would refuse to
+    // multicall. Verified against rpc.mainnet.chain.robinhood.com.
+    contracts: { multicall3: { address: "0xca11bde05977b3631167028862be2a173976ca11" } },
 });
 
 export const robinhoodTestnet = defineChain({
@@ -19,6 +22,7 @@ export const robinhoodTestnet = defineChain({
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     rpcUrls: { default: { http: ["https://rpc.testnet.chain.robinhood.com"] } },
     blockExplorers: { default: { name: "Blockscout", url: "https://explorer.testnet.chain.robinhood.com" } },
+    contracts: { multicall3: { address: "0xca11bde05977b3631167028862be2a173976ca11" } },
 });
 
 export const VIEM_CHAINS: Record<number, Chain> = {

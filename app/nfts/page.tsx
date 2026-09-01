@@ -1,13 +1,13 @@
 import NftGallery from "../components/NftGallery";
 
-// ...in your real app, gate this page behind your existing auth...
+// The machine's pool on its own page. For a WALLET's cards see WalletCards, which uses a different
+// API — /api/getNfts has no owner filter.
 export default function NftsPage() {
-    // TODO: replace with your logged-in user's owner address (wallet public key, etc.)
-    const owner: string | undefined = undefined;
+    const code = process.env.NEXT_PUBLIC_PACK_TYPE ?? "pokemon_50";
 
     return (
-        <main style={{ padding: 24 }}>
-            <NftGallery owner={owner} />
+        <main className="container mx-auto px-4 py-8">
+            <NftGallery code={code} />
         </main>
     );
 }

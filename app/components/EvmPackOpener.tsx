@@ -7,7 +7,6 @@ import { PackExpiredError } from "@/app/evm/api";
 import { explorerTokenUrl, explorerTxUrl } from "@/app/evm/chains";
 import { evmAttr, evmCardImage, type EvmChainInfo, type EvmLane, type EvmOpenPack } from "@/app/evm/types";
 import { sellBlockedReason } from "./EvmChainPicker";
-import type { OwnedCard } from "@/app/evm/resume";
 
 const rarityClass = (label?: string) => {
     switch ((label ?? "").toLowerCase()) {
@@ -307,54 +306,6 @@ export function SellButton({
                 </button>
                 {secondary}
             </div>
-        </div>
-    );
-}
-
-export function EvmCardsGrid({
-    cards,
-    chains,
-    onChanged,
-}: {
-    cards: OwnedCard[];
-    chains: EvmChainInfo[];
-    onChanged: () => void;
-}) {
-    if (cards.length === 0) {
-        return <p className="text-sm text-gray-500">No cards yet. Open a pack above.</p>;
-    }
-    return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((c) => {
-                const chain = chains.find((x) => x.chainId === c.chainId) ?? null;
-                const tokenUrl = explorerTokenUrl(c.chainId, c.contract, c.tokenId);
-                return (
-                    <div key={`${c.chainId}:${c.tokenId}`} className="border border-gray-200 rounded-lg p-3 space-y-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {c.image && <img src={c.image} alt={c.name ?? c.tokenId} className="w-full h-auto rounded" />}
-                        <div className="text-sm font-semibold text-gray-900">{c.name ?? `Token #${c.tokenId}`}</div>
-                        <div className="text-xs text-gray-500">
-                            {chain?.name ?? `chain ${c.chainId}`} · #{c.tokenId}
-                            {c.insuredValue !== undefined && ` · $${c.insuredValue} insured`}
-                        </div>
-                        {tokenUrl && (
-                            <a
-                                className="text-xs text-blue-700 underline"
-                                href={tokenUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                View on explorer
-                            </a>
-                        )}
-                        <SellButton
-                            card={{ memo: c.memo, chainId: c.chainId, tokenId: c.tokenId, contract: c.contract }}
-                            blockedReason={chain ? sellBlockedReason(chain) : "chain not served right now"}
-                            onSold={onChanged}
-                        />
-                    </div>
-                );
-            })}
         </div>
     );
 }

@@ -4,8 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import EvmChainPicker, { buyBlockedReason } from "@/app/components/EvmChainPicker";
 import EvmConnect from "@/app/components/EvmConnect";
-import EvmPackOpener, { EvmCardsGrid } from "@/app/components/EvmPackOpener";
+import EvmOwnedCards from "@/app/components/EvmOwnedCards";
+import EvmPackOpener from "@/app/components/EvmPackOpener";
 import EvmResumeBanner from "@/app/components/EvmResumeBanner";
+import NftGallery from "@/app/components/NftGallery";
 import { evmGet } from "@/app/evm/api";
 import { getCardsSnapshot, getEmptySnapshot, getPendingSnapshot, subscribeResume } from "@/app/evm/resume";
 import { lanesOf, type EvmChainInfo, type EvmChainsResponse } from "@/app/evm/types";
@@ -110,13 +112,12 @@ export default function EvmHome() {
                 onChanged={bump}
             />
 
-            <div>
-                <h2 className="text-2xl font-semibold mb-1">Your cards</h2>
-                <p className="text-sm text-gray-500 mb-4">
-                    Remembered in this browser only — the demo keeps no account. Sell back inside the buyback window.
-                </p>
-                <EvmCardsGrid cards={cards} chains={chains} onChanged={bump} />
-            </div>
+            {/* What YOU hold on this chain, read from the card contract. */}
+            <EvmOwnedCards chain={chain} localCards={cards} refreshKey={refreshKey} onChanged={bump} />
+
+            {/* What the MACHINE holds. The pool is the same physical inventory both chains draw from,
+                so this is the Solana-shaped /api/getNfts, not an EVM read. */}
+            <NftGallery code={PACK_TYPE} />
         </div>
     );
 }

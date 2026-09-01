@@ -2,10 +2,13 @@
 
 import PrivyConnect from "@/app/components/PrivyConnect";
 import NftGallery from "@/app/components/NftGallery";
+import WalletCards from "@/app/components/WalletCards";
 import PackOpener from "@/app/components/PackOpener";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useState } from "react";
 import Link from "next/link";
+
+const PACK_TYPE = process.env.NEXT_PUBLIC_PACK_TYPE ?? "pokemon_50";
 
 export default function Home() {
   const { wallets } = useWallets();
@@ -45,11 +48,11 @@ export default function Home() {
         {/* Pack Opener */}
         <PackOpener onPackOpened={handlePackOpened} />
 
-        {/* NFT Gallery - Always visible */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Your NFT Collection</h2>
-          <NftGallery owner={owner} key={refreshKey} />
-        </div>
+        {/* What YOU hold, keyed on the connected wallet. */}
+        <WalletCards owner={owner} key={`wallet-${refreshKey}`} />
+
+        {/* What the MACHINE holds. Two different questions, two different sources. */}
+        <NftGallery code={PACK_TYPE} />
       </div>
     </div>
   );

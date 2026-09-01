@@ -19,11 +19,14 @@ type Nft = {
 type GetNftsResponse = { nfts: Nft[] };
 
 function getImageUrl(nft: Nft) {
-    const fromFiles = nft.content?.files?.find((f) => (f.mime || "").startsWith("image/"));
-    const fromLinks = nft.content?.links?.image;
+    // NEVER require `mime`: the API stopped sending it, and `links` comes back null, so a mime test
+    // matched nothing and every card rendered as a grey box. files[0] is the card FRONT (files[1] is
+    // the back), so falling back to index 0 is the documented order, not a guess.
+    const files = nft.content?.files ?? [];
+    const file = files.find((f) => (f.mime ?? "").startsWith("image/")) ?? files[0];
 
-    // Prioritize cc_cdn, then cdn_uri, then original uri, then fallback to links
-    return fromFiles?.cc_cdn || fromFiles?.cdn_uri || fromFiles?.uri || fromLinks || "";
+    // cc_cdn first: our own CloudFront. cdn_uri is Helius's resizer and uri is a raw Arweave redirect.
+    return file?.cc_cdn || file?.cdn_uri || file?.uri || nft.content?.links?.image || "";
 }
 
 function getPrice(nft: Nft) {
@@ -33,8 +36,8 @@ function getPrice(nft: Nft) {
     return insuredValue ? `$${insuredValue}` : null;
 }
 
-export default function NftGallery(props: { owner?: string }) {
-    const { owner } = props;
+export default function NftGallery(props: { code?: string }) {
+    const { code } = props;
 
     const [data, setData] = React.useState<GetNftsResponse | null>(null);
     const [error, setError] = React.useState<string | null>(null);
@@ -51,7 +54,9 @@ export default function NftGallery(props: { owner?: string }) {
                 const res = await fetch("/api/getNfts", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(owner ? { owner } : {}),
+                    // `owner` used to be sent here and was silently ignored upstream — the handler
+                    // reads code/rarity/page/limit only. This grid is the machine's pool, not a wallet.
+                    body: JSON.stringify(code ? { code } : {}),
                 });
 
                 if (!res.ok) {
@@ -71,24 +76,25 @@ export default function NftGallery(props: { owner?: string }) {
         return () => {
             alive = false;
         };
-    }, [owner]);
-
-    if (loading) return <div>Loading NFTs…</div>;
-    if (error) return <div style={{ color: "crimson" }}>Error: {error}</div>;
+    }, [code]);
 
     const nfts = data?.nfts ?? [];
-    if (!nfts.length) return <div>No NFTs found.</div>;
-
-    // Limit to first 100 NFTs
     const displayedNfts = nfts.slice(0, 100);
 
     return (
         <div>
-            <h2>NFTs in the Machine</h2>
+            <h2 className="text-2xl font-semibold mb-1">In the gacha machine</h2>
+            <p className="text-sm text-gray-500 mb-4">
+                The pool this pack draws from — every card here is one you can win. Not your wallet.
+            </p>
+
+            {loading && <div className="text-sm text-gray-500">Loading the pool...</div>}
+            {error && <div className="text-sm text-red-600">Error: {error}</div>}
+            {!loading && !error && nfts.length === 0 && (
+                <div className="text-sm text-gray-500">The machine reports no cards in this pool.</div>
+            )}
             {nfts.length > 100 && (
-                <p style={{ marginTop: 8, fontSize: 14, color: "#666" }}>
-                    Showing first 100 of {nfts.length} NFTs
-                </p>
+                <p className="text-sm text-gray-600 mb-3">Showing the first 100 of {nfts.length}</p>
             )}
             <div
                 style={{

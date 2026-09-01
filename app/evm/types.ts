@@ -100,6 +100,16 @@ export type EvmOpenPack = {
     status?: string;
 };
 
+/** GET buyback/available — a pure read, no quote issued, so it is safe to call per rendered card. */
+export type EvmBuybackAvailable = {
+    available: boolean;
+    /** Display only, and only present when available. Floats arrive unrounded (92.64999999999999). */
+    amount?: number;
+    amountBase?: string;
+    chainId?: number;
+    token?: EvmLane;
+};
+
 export type EvmBuybackQuote = {
     success: true;
     memo: string;

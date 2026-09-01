@@ -16,3 +16,11 @@ export const vaultAbi = parseAbi([
 
 // Testnet only — see MINTABLE_TEST_TOKENS in ./chains.
 export const testUsdcAbi = parseAbi(["function mint(address to, uint256 amount)"]);
+
+// ERC721Enumerable, hand-written for ONE reason: viem's erc721Abi carries a misnamed overload,
+// tokenByIndex(address,uint256), whose selector is not tokenOfOwnerByIndex's — calling it reverts.
+export const erc721EnumerableAbi = parseAbi([
+    "function balanceOf(address owner) view returns (uint256)",
+    "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
+    "function tokenURI(uint256 tokenId) view returns (string)",
+]);
