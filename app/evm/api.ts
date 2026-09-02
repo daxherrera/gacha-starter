@@ -1,5 +1,6 @@
 "use client";
 
+import { apiErrorText } from "./errors";
 import type { EvmBuybackQuote, EvmOpenPack } from "./types";
 
 /** Non-2xx is information, not an exception — every caller branches on the status. */
@@ -62,7 +63,8 @@ export async function openPackUntilDone(
             ...(payTxHash ? { payTxHash } : {}),
         });
         if (status === 200) return body;
-        if (status === 410) throw new PackExpiredError(memo);
+        if (status === 410)
+            throw new PackExpiredError(`That pack is more than 2 hours old and can no longer be opened (memo ${memo}).`);
 
         const code = String(body.code ?? "");
         const retryable =
@@ -71,10 +73,13 @@ export async function openPackUntilDone(
             status === 504 ||
             (status === 502 && (code === "MINT_PENDING" || code === "MINT_FAILED")) ||
             (status === 503 && code === "CHAIN_PAUSED");
-        if (!retryable) throw new Error(code || String(body.error ?? `openPack ${status}`));
+        if (!retryable) throw new Error(apiErrorText(body, `openPack ${status}`));
 
         onStatus(code || String(status));
-        if (Date.now() > deadline) throw new PackStillPendingError(memo);
+        if (Date.now() > deadline)
+            throw new PackStillPendingError(
+                `Still confirming this pack after 5 minutes — nothing is lost. Leave it in "Unfinished packs" and try again shortly (memo ${memo}).`,
+            );
         await sleep(Number(body.retryAfterMs ?? 1500));
     }
 }
@@ -96,7 +101,7 @@ export async function buybackQuoteUntilReady(
             status === 0 ||
             status === 504 ||
             (status === 503 && (code === "OWNER_CHECK_UNAVAILABLE" || code === "INSUFFICIENT_FLOAT"));
-        if (!retryable) throw new Error(code || String(body.error ?? `buyback ${status}`));
+        if (!retryable) throw new Error(apiErrorText(body, `buyback ${status}`));
 
         onStatus(code || String(status));
         if (Date.now() > deadline) throw new Error(`buyback quote still ${code || status} after 90s`);

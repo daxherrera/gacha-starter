@@ -5,6 +5,7 @@ import { formatUnits } from "viem";
 import { erc20Abi, erc721Abi, payAbi, vaultAbi } from "./abis";
 import { buybackQuoteUntilReady, evmPost, openPackUntilDone, until } from "./api";
 import { getEvmClients } from "./clients";
+import { apiErrorText } from "./errors";
 import { clearPending, forgetCard, patchPending, rememberCard, savePending, type OwnedCard } from "./resume";
 import { evmCardImage, type EvmGeneratePack, type EvmLane, type EvmOpenPack } from "./types";
 
@@ -36,7 +37,7 @@ export async function buyPack(opts: {
         token: lane.key,
     });
     if (gen.status !== 200) {
-        throw new Error(String(gen.body.code ?? gen.body.error ?? `generatePack ${gen.status}`));
+        throw new Error(apiErrorText(gen.body, `generatePack ${gen.status}`));
     }
     const pack = gen.body;
 
@@ -65,15 +66,12 @@ export async function buyPack(opts: {
 
     const { walletClient, publicClient } = await getEvmClients(wallet, pack.chainId);
 
-    // Fail on balance BEFORE the approve. pay() would otherwise revert inside the token, costing a
-    // wasted approve and reporting itself as an ERC-20 string the buyer cannot act on.
-    const balance = (await publicClient.readContract({
-        address: token,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [player],
-    })) as bigint;
-    if (balance < amount) {
+    // Fail on balance BEFORE the approve, or pay() reverts inside the token after a wasted approve.
+    // Fails OPEN: a rate-limited read must not block a buy that pay() would have accepted.
+    const balance = (await publicClient
+        .readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [player] })
+        .catch(() => null)) as bigint | null;
+    if (balance !== null && balance < amount) {
         // Safe to clear ONLY here: nothing is signed yet, so no payment can be stranded — and it
         // leaves the lane unlocked so the buyer can pick one they can afford.
         clearPending(pack.memo);
