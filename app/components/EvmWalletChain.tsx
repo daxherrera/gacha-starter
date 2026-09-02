@@ -4,6 +4,7 @@ import * as React from "react";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 import { chainLabel } from "@/app/evm/chains";
 import { ensureWalletChain, readWalletChainId } from "@/app/evm/clients";
+import { errorText } from "@/app/evm/errors";
 
 /**
  * A Privy embedded wallet has no UI of its own (showWalletUIs: false), so the chain it will actually
@@ -59,7 +60,7 @@ export default function EvmWalletChain({
             setWalletChain(chainId);
             onSwitched?.();
         } catch (e) {
-            setError((e as Error).message.split("\n")[0]);
+            setError(errorText(e));
         } finally {
             setBusy(false);
         }

@@ -6,12 +6,30 @@ export { erc20Abi, erc721Abi } from "viem";
 
 // GachaVault.pay — the memo channel. `token` is a parameter because the amount cannot identify the
 // lane: two 6-decimal lanes are indistinguishable by amount alone.
-export const payAbi = parseAbi(["function pay(address token, uint256 amount, string memo)"]);
+// The error fragments are load-bearing, not decoration: without them viem can only print a bare
+// selector. The two lanes fail in different dialects — Circle's USDC reverts with a string, an
+// OpenZeppelin v5 token (tUSDC) reverts with ERC20InsufficientBalance/Allowance.
+export const payAbi = parseAbi([
+    "function pay(address token, uint256 amount, string memo)",
+    "error PayIsPaused()",
+    "error TokenNotApproved()",
+    "error SafeERC20FailedOperation(address token)",
+    "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+    "error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed)",
+]);
 
 // `token` comes FIRST and is inside the signed quote — the lane is the server's decision, not the
 // seller's. Any other value reverts with BadSignature before anything moves.
 export const vaultAbi = parseAbi([
     "function sellBack(address token, uint256 tokenId, uint256 amount, uint256 deadline, uint256 quoteId, bytes signature)",
+    // Every revert sellBack can reach, so a failed sale names itself instead of showing a selector.
+    "error BuybackIsPaused()",
+    "error TokenNotApproved()",
+    "error QuoteExpired()",
+    "error QuoteAlreadyUsed()",
+    "error NotTokenOwner()",
+    "error InsufficientFloat()",
+    "error BadSignature()",
 ]);
 
 // Testnet only — see MINTABLE_TEST_TOKENS in ./chains.

@@ -7,6 +7,7 @@ import { PackExpiredError } from "@/app/evm/api";
 import { explorerTokenUrl, explorerTxUrl } from "@/app/evm/chains";
 import { evmAttr, evmCardImage, type EvmChainInfo, type EvmLane, type EvmOpenPack } from "@/app/evm/types";
 import { sellBlockedReason } from "./EvmChainPicker";
+import { errorText } from "@/app/evm/errors";
 
 const rarityClass = (label?: string) => {
     switch ((label ?? "").toLowerCase()) {
@@ -57,7 +58,7 @@ export default function EvmPackOpener({
             setError(
                 e instanceof PackExpiredError
                     ? "That pack is more than 2 hours old and can no longer be opened."
-                    : (e as Error).message.split("\n")[0],
+                    : errorText(e),
             );
         } finally {
             setBusy(false);
@@ -279,7 +280,7 @@ export function SellButton({
             setStatus(`Sold for ${refundAmount} ${symbol}`);
             onSold();
         } catch (e) {
-            setError((e as Error).message.split("\n")[0]);
+            setError(errorText(e));
         } finally {
             setBusy(false);
         }

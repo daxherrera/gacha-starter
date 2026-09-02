@@ -1,6 +1,7 @@
 "use client";
 
 import type { ConnectedWallet } from "@privy-io/react-auth";
+import { formatUnits } from "viem";
 import { erc20Abi, erc721Abi, payAbi, vaultAbi } from "./abis";
 import { buybackQuoteUntilReady, evmPost, openPackUntilDone, until } from "./api";
 import { getEvmClients } from "./clients";
@@ -63,6 +64,24 @@ export async function buyPack(opts: {
     });
 
     const { walletClient, publicClient } = await getEvmClients(wallet, pack.chainId);
+
+    // Fail on balance BEFORE the approve. pay() would otherwise revert inside the token, costing a
+    // wasted approve and reporting itself as an ERC-20 string the buyer cannot act on.
+    const balance = (await publicClient.readContract({
+        address: token,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [player],
+    })) as bigint;
+    if (balance < amount) {
+        // Safe to clear ONLY here: nothing is signed yet, so no payment can be stranded — and it
+        // leaves the lane unlocked so the buyer can pick one they can afford.
+        clearPending(pack.memo);
+        throw new Error(
+            `You have ${formatUnits(balance, pack.token.decimals)} ${pack.token.symbol} but this pack costs ` +
+                `${pack.amountHuman} ${pack.token.symbol}. Nothing was charged.`,
+        );
+    }
 
     const allowance = (await publicClient.readContract({
         address: token,

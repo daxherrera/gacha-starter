@@ -8,6 +8,7 @@ import { FAUCETS, isMintableTestToken, VIEM_CHAINS } from "@/app/evm/chains";
 import { getEvmClients, getReadClient } from "@/app/evm/clients";
 import EvmWalletChain from "@/app/components/EvmWalletChain";
 import type { EvmLane } from "@/app/evm/types";
+import { errorText } from "@/app/evm/errors";
 
 // Below this you cannot send approve + pay on any of these chains.
 const LOW_GAS = 500_000_000_000_000n; // 0.0005 ETH
@@ -104,7 +105,7 @@ export default function EvmConnect({
             setReloadKey((k) => k + 1);
             onBalanceChange?.();
         } catch (e) {
-            setError((e as Error).message.split("\n")[0]);
+            setError(errorText(e));
         } finally {
             setBusy(false);
         }

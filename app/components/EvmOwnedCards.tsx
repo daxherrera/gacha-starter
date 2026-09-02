@@ -9,6 +9,7 @@ import type { OwnedCard } from "@/app/evm/resume";
 import type { EvmBuybackAvailable, EvmChainInfo } from "@/app/evm/types";
 import { SellButton } from "./EvmPackOpener";
 import { sellBlockedReason } from "./EvmChainPicker";
+import { errorText } from "@/app/evm/errors";
 
 type Availability = Record<string, EvmBuybackAvailable | undefined>;
 
@@ -59,7 +60,7 @@ export default function EvmOwnedCards({
             } catch (e) {
                 console.error("owned nft read failed", e);
                 if (live) {
-                    setLoad({ key: mine, state: "error", total: 0, nfts: [], error: (e as Error).message.split("\n")[0] });
+                    setLoad({ key: mine, state: "error", total: 0, nfts: [], error: errorText(e) });
                 }
             }
         })();

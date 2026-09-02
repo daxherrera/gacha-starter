@@ -13,6 +13,7 @@ import {
     type PendingPack,
 } from "@/app/evm/resume";
 import type { EvmPackStatus } from "@/app/evm/types";
+import { errorText } from "@/app/evm/errors";
 
 /**
  * The safety net for the one thing that cannot be undone. Payments are final and
@@ -76,7 +77,7 @@ function ResumeRow({ pack, onDone }: { pack: PendingPack; onDone: () => void }) 
             setAwarded(true);
             onDone();
         } catch (e) {
-            setError((e as Error).message.split("\n")[0]);
+            setError(errorText(e));
         } finally {
             setBusy(false);
         }
