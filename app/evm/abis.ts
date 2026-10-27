@@ -8,7 +8,7 @@ export { erc20Abi, erc721Abi } from "viem";
 // lane: two 6-decimal lanes are indistinguishable by amount alone.
 // The error fragments are load-bearing, not decoration: without them viem can only print a bare
 // selector. The two lanes fail in different dialects — Circle's USDC reverts with a string, an
-// OpenZeppelin v5 token (tUSDC) reverts with ERC20InsufficientBalance/Allowance.
+// OpenZeppelin v5 token (tUSDC2) reverts with ERC20InsufficientBalance/Allowance.
 export const payAbi = parseAbi([
     "function pay(address token, uint256 amount, string memo)",
     "error PayIsPaused()",

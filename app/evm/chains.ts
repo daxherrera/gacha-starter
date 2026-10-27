@@ -93,11 +93,11 @@ export const FAUCETS: Record<number, { label: string; url: string }[]> = {
 };
 
 // Tokens whose mint(address,uint256) is PERMISSIONLESS, so the demo tops itself up with no faucet and
-// no team involvement (gachamachine/contracts/src/TestUSDC.sol:16-18). An explicit allowlist, never a
+// no team involvement (gachamachine/contracts/src/TestUSDC2.sol:31-33). An explicit allowlist, never a
 // guess — a mint button pointed at a mainnet token is a revert at best.
 export const MINTABLE_TEST_TOKENS: Record<number, string[]> = {
-    84532: ["0x794A5456be0058a5B8B519AaC274347afC8320A4"],
-    46630: ["0x96e040058E77DDd3FA1f2e216Aabe1c33e78DFC9"],
+    84532: ["0xe9caDaBa92580cAd1ca21883Ac234729108DaC8C"],
+    46630: ["0x09fb057b9eDA9D4893180AD69057091e7f2a27fb"],
 };
 
 export function isMintableTestToken(chainId: number, address: string): boolean {

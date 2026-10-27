@@ -28,9 +28,9 @@ Both are thin clients. Every route under `app/api/` is a small forwarder that at
 - **Native ETH for gas.** The machine sponsors the gas for the card mint only; your `approve`, `pay`
   and `sellBack` are ordinary transactions you pay for. Base Sepolia:
   https://www.alchemy.com/faucets/base-sepolia.
-- **The payment token.** On a testnet `tUSDC` lane the page shows a **Mint 100 tUSDC** button —
+- **The payment token.** On a testnet `tUSDC2` lane the page shows a **Mint 100 tUSDC2** button —
   that token's `mint()` is permissionless, so you can top yourself up. Real Base Sepolia USDC is
-  scarce and cannot be minted; prefer the `tUSDC` lane.
+  scarce and cannot be minted; prefer the `tUSDC2` lane. On Robinhood testnet it is the only lane.
 
 ## Solana vs EVM: what changes
 
